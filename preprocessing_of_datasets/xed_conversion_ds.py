@@ -1,3 +1,4 @@
+"""Converts the XED dataset into a single-label emotion classification format."""
 import pandas as pd
 
 # Emotion mapping
@@ -10,7 +11,6 @@ label_map = {
     "7": "surprise"
 }
 
-# Load TSV
 df = pd.read_csv("tw-projections.tsv", sep="\t", header=None, names=["text", "labels"])
 
 # ensure string
@@ -41,7 +41,6 @@ df_out["emojis"] = ""
 # reorder columns
 df_out = df_out[["emotion", "text", "emojis"]]
 
-# Save CSV
 df_out.to_csv("xed_tw.csv", index=False)
 
 print("Saved:", len(df_out), "rows")

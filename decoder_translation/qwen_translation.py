@@ -14,10 +14,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, classification_report
 
-# =========================
-# CONFIG
-# =========================
 
+# CONFIG
 ROOT = Path("thesis")
 TRANSLATED_DIR = ROOT / "translated_nllb"
 
@@ -63,10 +61,7 @@ device = torch.device(
 print("Using device:", device)
 
 
-# =========================
 # HELPERS
-# =========================
-
 def safe_model_id(model_name):
     return model_name.split("/")[-1].replace(" ", "_")
 
@@ -173,10 +168,7 @@ def translated_files_for_target(target):
     return sorted(TRANSLATED_DIR.glob(f"*to_{target}.csv"))
 
 
-# =========================
 # LOAD TARGET TRAINING DATA
-# =========================
-
 english_df = load_and_balance(ENGLISH_FILES)
 arabic_df = load_and_balance(ARABIC_FILES)
 
@@ -187,10 +179,7 @@ print("Arabic probe rows:", len(arabic_df))
 print(arabic_df["emotion"].value_counts())
 
 
-# =========================
 # MAIN LOOP
-# =========================
-
 summary_rows = []
 
 for model_name in MODELS:
@@ -216,9 +205,7 @@ for model_name in MODELS:
     model.to(device)
     model.eval()
 
-    # -------------------------
     # Train English probes
-    # -------------------------
     english_texts = english_df["text"].tolist()
     english_labels = english_df["emotion"].tolist()
 
@@ -232,9 +219,7 @@ for model_name in MODELS:
     english_mean_probe = train_probe(english_mean_X, english_labels)
     english_last_probe = train_probe(english_last_X, english_labels)
 
-    # -------------------------
     # Train Arabic probes
-    # -------------------------
     arabic_texts = arabic_df["text"].tolist()
     arabic_labels = arabic_df["emotion"].tolist()
 
@@ -252,9 +237,8 @@ for model_name in MODELS:
 
     log_lines = [f"MODEL: {model_name}\n"]
 
-    # -------------------------
+
     # Evaluate translations into English
-    # -------------------------
     for file_path in translated_files_for_target("english"):
         df_eval = load_and_balance([file_path])
         eval_texts = df_eval["text"].tolist()
@@ -280,9 +264,8 @@ for model_name in MODELS:
         log_lines.append(f"Mean macro F1: {mean_results['macro_f1']}")
         log_lines.append(f"Last macro F1: {last_results['macro_f1']}")
 
-    # -------------------------
+
     # Evaluate translations into Arabic
-    # -------------------------
     for file_path in translated_files_for_target("arabic"):
         df_eval = load_and_balance([file_path])
         eval_texts = df_eval["text"].tolist()
@@ -319,10 +302,8 @@ for model_name in MODELS:
     gc.collect()
 
 
-# =========================
-# SAVE SUMMARY
-# =========================
 
+# Save summary
 summary_df = pd.DataFrame(summary_rows)
 summary_path = OUTPUT_DIR / "translation_baseline_summary.csv"
 summary_df.to_csv(summary_path, index=False)

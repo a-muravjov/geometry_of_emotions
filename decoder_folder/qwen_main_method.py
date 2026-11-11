@@ -23,16 +23,14 @@ from sklearn.metrics import (
 )
 from sklearn.manifold import TSNE
 import matplotlib
-matplotlib.use("Agg")  # important for cluster / no-display environments
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import log_loss, confusion_matrix
 
 warnings.filterwarnings("ignore")
 
-# -------------------------
-# Config
-# -------------------------
+
 ROOT = Path("thesis/")
 DATA_FILE = ROOT / "combined_arabic_balanced_1200_new_bestest_no_@.csv"
 
@@ -128,7 +126,6 @@ MODELS = [
     "Qwen/Qwen2.5-7B-Instruct",
 ]
 
-# You can also use per-model batch sizes if needed
 MODEL_BATCH_SIZES = {
     "Qwen/Qwen2.5-1.5B-Instruct": 8,
     "Qwen/Qwen2.5-3B-Instruct": 4,
@@ -142,17 +139,14 @@ MAX_TSNE_POINTS = 6000
 
 os.makedirs(BASE_OUTPUT_DIR, exist_ok=True)
 
-# -------------------------
+
 # Reproducibility
-# -------------------------
 np.random.seed(RANDOM_STATE)
 torch.manual_seed(RANDOM_STATE)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(RANDOM_STATE)
 
-# -------------------------
 # Load data
-# -------------------------
 df = pd.read_csv(DATA_FILE)
 df["text"] = df["text"].astype(str)
 df["emotion"] = df["emotion"].astype(str)
@@ -164,15 +158,10 @@ emotion_order = sorted(df["emotion"].unique())
 print("Rows:", len(df))
 print("Emotions:", emotion_order)
 
-# -------------------------
-# Device
-# -------------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
-# -------------------------
 # Helpers
-# -------------------------
 def safe_model_id(model_name: str) -> str:
     return model_name.split("/")[-1].replace(" ", "_")
 
@@ -252,9 +241,7 @@ def get_probe_space(probe, embeddings, use_probabilities=False):
     return scores
     
 
-# -------------------------
-# Training / reporting helpers
-# -------------------------
+# Training
 def train_probe(embeddings, labels_local, name):
     X_train, X_test, y_train, y_test = train_test_split(
         embeddings,
@@ -639,7 +626,7 @@ def run_crosslingual_projection_eval(
     text_blocks = []
     summary = {}
 
-    text_blocks.append(f"\n===== {dataset_name.upper()} → {target_name.upper()} PROJECTION EVAL =====\n")
+    text_blocks.append(f"{dataset_name.upper()} → {target_name.upper()} PROJECTION EVAL\n")
     text_blocks.append(f"Rows after balancing: {len(eval_df)}")
     text_blocks.append(f"Calibration size: {len(y_calib)}")
     text_blocks.append(f"Test size: {len(y_test)}\n")
@@ -717,9 +704,8 @@ def run_crosslingual_projection_eval(
 
     return "\n".join(text_blocks), summary
 
-# -------------------------
+
 # Main loop
-# -------------------------
 summary_rows = []
 
 for model_name in MODELS:
@@ -734,9 +720,6 @@ for model_name in MODELS:
 
     batch_size = MODEL_BATCH_SIZES.get(model_name, 4)
 
-    # -------------------------
-    # Load model
-    # -------------------------
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     if tokenizer.pad_token is None:
@@ -749,9 +732,7 @@ for model_name in MODELS:
     model.to(device)
     model.eval()
 
-    # -------------------------
     # Encode
-    # -------------------------
     mean_emb, last_emb = encode_texts_decoder(
         texts,
         tokenizer,
@@ -768,9 +749,7 @@ for model_name in MODELS:
     mean_emb = normalize(mean_emb, norm="l2")
     last_emb = normalize(last_emb, norm="l2")
 
-    # -------------------------
     # Centroids
-    # -------------------------
     mean_centroids = compute_centroids(mean_emb, df, emotion_order)
     last_centroids = compute_centroids(last_emb, df, emotion_order)
 
@@ -790,18 +769,13 @@ for model_name in MODELS:
     append_text(log_file, dataframe_to_string(last_sim, "Last-token centroid cosine similarity"))
     
     
-
-    # -------------------------
     # Linear probes
-    # -------------------------
     mean_probe, mean_metrics, mean_text = train_probe(mean_emb, labels, "Mean pooled")
     last_probe, last_metrics, last_text = train_probe(last_emb, labels, "Last token")
     
     class_order = list(mean_probe.classes_)
 
-    # -------------------------
     # English target space
-    # -------------------------
     english_balanced_df = balance_eval_df(
         english_eval_df,
         class_order,
@@ -848,9 +822,7 @@ for model_name in MODELS:
     append_text(log_file, mean_text)
     append_text(log_file, last_text)
 
-    # -------------------------
     # External evaluation: English
-    # -------------------------
     english_eval_text, english_eval_summary = run_calibrated_evaluation(
         eval_df=english_eval_df,
         tokenizer=tokenizer,
@@ -865,9 +837,7 @@ for model_name in MODELS:
     )
     append_text(log_file, english_eval_text)
 
-    # -------------------------
     # External evaluation: Arabic
-    # -------------------------
     arabic_eval_text, arabic_eval_summary = run_calibrated_evaluation(
         eval_df=arabic_eval_df,
         tokenizer=tokenizer,
@@ -882,9 +852,7 @@ for model_name in MODELS:
     )
     append_text(log_file, arabic_eval_text)
     
-    # -------------------------
     # Chinese projected into Arabic space
-    # -------------------------
     chinese_to_arabic_text, chinese_to_arabic_summary = run_crosslingual_projection_eval(
         eval_df=chinese_eval_df,
         tokenizer=tokenizer,
@@ -902,10 +870,8 @@ for model_name in MODELS:
     )
     
     append_text(log_file, chinese_to_arabic_text)
-    
-    # -------------------------
+
     # Chinese projected into English space
-    # -------------------------
     chinese_to_english_text, chinese_to_english_summary = run_crosslingual_projection_eval(
         eval_df=chinese_eval_df,
         tokenizer=tokenizer,
@@ -924,10 +890,8 @@ for model_name in MODELS:
     
     append_text(log_file, chinese_to_english_text)
     
-    # -------------------------
+
     # Estonian projected into Arabic space
-    # -------------------------
-    
     estonian_to_arabic_text, estonian_to_arabic_summary = run_crosslingual_projection_eval(
         eval_df=estonian_eval_df,
         tokenizer=tokenizer,
@@ -946,9 +910,8 @@ for model_name in MODELS:
     
     append_text(log_file, estonian_to_arabic_text)
     
-    # -------------------------
+
     # Estonian projected into English space
-    # -------------------------
     estonian_to_english_text, estonian_to_english_summary = run_crosslingual_projection_eval(
         eval_df=estonian_eval_df,
         tokenizer=tokenizer,
@@ -968,10 +931,7 @@ for model_name in MODELS:
     append_text(log_file, estonian_to_english_text)
     
 
-    # -------------------------
     # Russian projected into Arabic space
-    # -------------------------
-    
     russian_to_arabic_text, russian_to_arabic_summary = run_crosslingual_projection_eval(
         eval_df=russian_eval_df,
         tokenizer=tokenizer,
@@ -990,9 +950,8 @@ for model_name in MODELS:
     
     append_text(log_file, russian_to_arabic_text)
     
-    # -------------------------
+
     # Russian projected into English space
-    # -------------------------
     russian_to_english_text, russian_to_english_summary = run_crosslingual_projection_eval(
         eval_df=russian_eval_df,
         tokenizer=tokenizer,
@@ -1011,10 +970,8 @@ for model_name in MODELS:
     
     append_text(log_file, russian_to_english_text)
 
-    # -------------------------
-    # German projected into Arabic space
-    # -------------------------
     
+    # German projected into Arabic space
     german_to_arabic_text, german_to_arabic_summary = run_crosslingual_projection_eval(
         eval_df=german_eval_df,
         tokenizer=tokenizer,
@@ -1033,9 +990,8 @@ for model_name in MODELS:
     
     append_text(log_file, german_to_arabic_text)
     
-    # -------------------------
+
     # German projected into English space
-    # -------------------------
     german_to_english_text, german_to_english_summary = run_crosslingual_projection_eval(
         eval_df=german_eval_df,
         tokenizer=tokenizer,
@@ -1054,10 +1010,8 @@ for model_name in MODELS:
     
     append_text(log_file, german_to_english_text)
 
-    # -------------------------
+
     # Swahili projected into Arabic space
-    # -------------------------
-    
     swahili_to_arabic_text, swahili_to_arabic_summary = run_crosslingual_projection_eval(
         eval_df=swahili_eval_df,
         tokenizer=tokenizer,
@@ -1076,9 +1030,8 @@ for model_name in MODELS:
     
     append_text(log_file, swahili_to_arabic_text)
     
-    # -------------------------
+
     # Swahili projected into English space
-    # -------------------------
     swahili_to_english_text, swahili_to_english_summary = run_crosslingual_projection_eval(
         eval_df=swahili_eval_df,
         tokenizer=tokenizer,
@@ -1097,10 +1050,8 @@ for model_name in MODELS:
     
     append_text(log_file, swahili_to_english_text)
     
-    # -------------------------
+
     # Ukrainian projected into Arabic space
-    # -------------------------
-    
     ukrainian_to_arabic_text, ukrainian_to_arabic_summary = run_crosslingual_projection_eval(
         eval_df=ukrainian_eval_df,
         tokenizer=tokenizer,
@@ -1119,9 +1070,8 @@ for model_name in MODELS:
     
     append_text(log_file, ukrainian_to_arabic_text)
     
-    # -------------------------
+
     # Ukrainian projected into English space
-    # -------------------------
     ukrainian_to_english_text, ukrainian_to_english_summary = run_crosslingual_projection_eval(
         eval_df=ukrainian_eval_df,
         tokenizer=tokenizer,
@@ -1141,9 +1091,7 @@ for model_name in MODELS:
     append_text(log_file, ukrainian_to_english_text)
     
 
-    # -------------------------
-    # Summary row
-    # -------------------------
+    # Summary
     summary_row = {
         "model": model_id,
         "mean_macro_f1_train": mean_metrics["macro_f1"],
@@ -1174,17 +1122,15 @@ for model_name in MODELS:
 
     summary_rows.append(summary_row)
 
-    # -------------------------
-    # Cleanup (VERY important for big models)
-    # -------------------------
+
     del model
     del tokenizer
     torch.cuda.empty_cache()
     gc.collect()
 
-# -------------------------
+
 # Save global summary
-# -------------------------
+
 summary_df = pd.DataFrame(summary_rows)
 summary_path = os.path.join(BASE_OUTPUT_DIR, "summary.csv")
 summary_df.to_csv(summary_path, index=False)

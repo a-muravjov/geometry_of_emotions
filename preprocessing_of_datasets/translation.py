@@ -1,4 +1,4 @@
-import os
+"""Translates multilingual emotion datasets into English and Arabic using NLLB-200."""
 from pathlib import Path
 
 import pandas as pd
@@ -6,9 +6,7 @@ import torch
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-# -------------------------
-# Config
-# -------------------------
+
 ROOT = Path("thesis")
 OUTPUT_DIR = ROOT / "translated_nllb"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -42,9 +40,9 @@ FILES_TO_TRANSLATE = {
     "brighter_ukrainian.csv": "ukr_Cyrl",
 }
 
-# -------------------------
+
 # Load model
-# -------------------------
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:", device)
 
@@ -88,9 +86,8 @@ def translate_texts(texts, src_lang, tgt_lang):
     return outputs
 
 
-# -------------------------
+
 # Translate files
-# -------------------------
 for filename, src_lang in FILES_TO_TRANSLATE.items():
     input_path = ROOT / filename
 
@@ -131,5 +128,3 @@ for filename, src_lang in FILES_TO_TRANSLATE.items():
 
         out_df.to_csv(output_path, index=False, encoding="utf-8-sig")
         print(f"Saved: {output_path}")
-
-print("\nDone.")

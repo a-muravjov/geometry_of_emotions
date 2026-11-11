@@ -1,3 +1,4 @@
+"""Combines and cleans English emotion datasets using emoji-based labels and text filtering."""
 import os
 import glob
 import re
@@ -6,9 +7,6 @@ import emoji
 from collections import Counter, defaultdict
 import html
 
-# -------------------------
-# Config
-# -------------------------
 input_folder = "all_english_datasets_surprise_and_fear"
 output_file = "combined_english_cleaned_surprise_and_fear.csv"
 
@@ -17,11 +15,12 @@ max_words = 80
 
 emoji_to_emotion = {
     # JOY
-    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy", "🥂": "joy",
-    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😄": "joy", "😁": "joy", "😆": "joy",
+    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy",
+    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😁": "joy", "😆": "joy",
     "😂": "joy", "🤣": "joy", "😊": "joy", "😉": "joy", "😍": "joy", "🥰": "joy", "😘": "joy",
-    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😙": "joy", "😛": "joy", "😜": "joy",
-    "🤪": "joy", "😝": "joy", "😌": "joy", "❤️": "joy", "🩷": "joy", "🧡": "joy", "💜": "joy", "❤": "joy", "🙏": "joy",
+    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😛": "joy", "😜": "joy", "🤪": "joy",
+    "😝": "joy", "😌": "joy", "❤️": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "🙏": "joy",
 
     # SADNESS
     "💔": "sadness", "😢": "sadness", "😞": "sadness", "😓": "sadness",
@@ -32,10 +31,10 @@ emoji_to_emotion = {
     "😠": "anger", "🖕": "anger", "😤": "anger", "💢": "anger", "😾": "anger",
 
     # FEAR
-    "✝️": "fear", "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
-    "🙀": "fear", "😖": "fear", "😣": "fear", "😟": "fear",
+    "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
+    "🙀": "fear", "😖": "fear", "😣": "fear",
 
-    # SURPRISE (updated)
+    # SURPRISE
     "🎉": "surprise",
     "🎊": "surprise",
     "🥳": "surprise",
@@ -52,9 +51,8 @@ emoji_to_emotion = {
     "🤮": "disgust", "🤢": "disgust",
 }
 
-# -------------------------
+
 # Regex helpers
-# -------------------------
 URL_RE = re.compile(r"(https?://\S+|www\.\S+)")
 QUOTE_LINE_RE = re.compile(r"(^|\n)\s*>\s*")
 ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\ufeff]")
@@ -64,20 +62,17 @@ USER_RE = re.compile(r"\bu/[A-Za-z0-9_-]+\b", flags=re.IGNORECASE)
 SUBREDDIT_RE = re.compile(r"\br/[A-Za-z0-9_]+\b", flags=re.IGNORECASE)
 DELETED_RE = re.compile(r"\[(deleted|removed)\]", flags=re.IGNORECASE)
 
-# markdown-ish cleanup
-MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")      # [text](url) -> text
-MD_BOLDITALIC_RE = re.compile(r"(\*\*\*|___)(.+?)\1")    # ***text*** / ___text___
-MD_BOLD_RE = re.compile(r"(\*\*|__)(.+?)\1")             # **text** / __text__
-MD_ITALIC_RE = re.compile(r"(\*|_)([^*_]+?)\1")          # *text* / _text_
-BACKTICK_RE = re.compile(r"`([^`]+)`")                   # `text` -> text
-TILDE_RE = re.compile(r"~~(.+?)~~")                      # ~~text~~ -> text
+# markdown cleanup
+MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+MD_BOLDITALIC_RE = re.compile(r"(\*\*\*|___)(.+?)\1")
+MD_BOLD_RE = re.compile(r"(\*\*|__)(.+?)\1")
+MD_ITALIC_RE = re.compile(r"(\*|_)([^*_]+?)\1")
+BACKTICK_RE = re.compile(r"`([^`]+)`")
+TILDE_RE = re.compile(r"~~(.+?)~~")
 
-# optional bare markdown markers leftover
 MARKER_RE = re.compile(r"[*_~`]+")
 
-# -------------------------
 # Helpers
-# -------------------------
 def normalize_text(text):
     if not isinstance(text, str):
         return ""
@@ -173,9 +168,9 @@ def check_conflict_and_assign(emojis_found):
         return mapped[0], [e for e in emojis_found if e in emoji_to_emotion], False
     return None, [e for e in emojis_found if e in emoji_to_emotion], True
 
-# -------------------------
+
 # Load all CSVs
-# -------------------------
+
 csv_files = sorted(glob.glob(os.path.join(input_folder, "*.csv")))
 
 if not csv_files:
@@ -195,9 +190,9 @@ print("\nFiles:")
 for f in csv_files:
     print("-", os.path.basename(f))
 
-# -------------------------
+
 # Basic cleanup
-# -------------------------
+
 if "text" not in df.columns:
     raise ValueError("Expected a 'text' column in the input files.")
 
@@ -209,9 +204,8 @@ if "emotion" in df.columns:
 if "emojis" not in df.columns:
     df["emojis"] = ""
 
-# -------------------------
-# Re-check emoji consistency
-# -------------------------
+
+# Check emoji consistency
 assigned_emotions = []
 mapped_emojis_joined = []
 conflict_flags = []
@@ -242,30 +236,26 @@ df = df[(df["assigned_emotion"].notna()) & (~df["has_conflict"])].copy()
 
 print("Rows removed due to conflict / no mapped emotion:", before_conflict_filter - len(df))
 
-# -------------------------
+
 # Clean text
-# -------------------------
 df["text_clean"] = df["text"].apply(remove_emojis_from_text)
 
-# -------------------------
+
 # Length filtering
-# -------------------------
 before_length_filter = len(df)
 df = df[df["text_clean"].str.len() > 0].copy()
 df = df[df["text_clean"].apply(valid_length)].copy()
 
 print("Rows removed due to short/long cleaned text:", before_length_filter - len(df))
 
-# -------------------------
+
 # Duplicate filtering
-# -------------------------
 before_dupes = len(df)
 df = df.drop_duplicates(subset=["text_clean"]).copy()
 print("Duplicates removed after cleaning:", before_dupes - len(df))
 
-# -------------------------
+
 # Finalize columns
-# -------------------------
 df["text"] = df["text_clean"]
 df["emotion"] = df["assigned_emotion"]
 
@@ -273,9 +263,8 @@ final_df = df[["emotion", "text", "mapped_emojis", "source_file"]].copy()
 final_df = final_df.rename(columns={"mapped_emojis": "emojis"})
 final_df = final_df.reset_index(drop=True)
 
-# -------------------------
+
 # Final statistics
-# -------------------------
 print("\nFinal rows:", len(final_df))
 
 print("\nFinal class distribution:")
@@ -301,9 +290,8 @@ print("\nMapped emoji distribution:")
 for e, count in emoji_counter.most_common():
     print(f"{e}: {count}")
 
-# -------------------------
+
 # Save
-# -------------------------
 final_df = final_df.drop(columns=["word_count"])
 final_df.to_csv(output_file, index=False, encoding="utf-8")
 

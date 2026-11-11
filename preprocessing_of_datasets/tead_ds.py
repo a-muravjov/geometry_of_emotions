@@ -1,3 +1,4 @@
+"""Processes and labels Arabic texts from the TEAD dataset using emoji-based emotion mappings."""
 import json
 import re
 import emoji
@@ -13,11 +14,12 @@ output_file = "tead_pure_mapped_comments.csv"
 
 emoji_to_emotion = {
     # JOY
-    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy", "🥂": "joy",
-    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😄": "joy", "😁": "joy", "😆": "joy",
+    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy",
+    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😁": "joy", "😆": "joy",
     "😂": "joy", "🤣": "joy", "😊": "joy", "😉": "joy", "😍": "joy", "🥰": "joy", "😘": "joy",
-    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😙": "joy", "😛": "joy", "😜": "joy",
-    "🤪": "joy", "😝": "joy", "😌": "joy", "❤️": "joy", "🩷": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😛": "joy", "😜": "joy", "🤪": "joy",
+    "😝": "joy", "😌": "joy", "❤️": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "🙏": "joy",
 
     # SADNESS
     "💔": "sadness", "😢": "sadness", "😞": "sadness", "😓": "sadness",
@@ -28,10 +30,10 @@ emoji_to_emotion = {
     "😠": "anger", "🖕": "anger", "😤": "anger", "💢": "anger", "😾": "anger",
 
     # FEAR
-    "✝️": "fear", "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
+    "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
     "🙀": "fear", "😖": "fear", "😣": "fear",
 
-    # SURPRISE (updated)
+    # SURPRISE
     "🎉": "surprise",
     "🎊": "surprise",
     "🥳": "surprise",
@@ -42,6 +44,7 @@ emoji_to_emotion = {
     "😮": "surprise",
     "😳": "surprise",
     "🤯": "surprise",
+    "😵": "surprise",
 
     # DISGUST
     "🤮": "disgust", "🤢": "disgust",

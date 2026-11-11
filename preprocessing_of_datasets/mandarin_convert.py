@@ -1,3 +1,4 @@
+"""Combines Simplified and Traditional Chinese emotion lexicons into a single dataset."""
 import pandas as pd
 
 target_emotions = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]

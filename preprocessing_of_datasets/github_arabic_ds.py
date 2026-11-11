@@ -1,3 +1,4 @@
+"""Processes Arabic tweets from multiple files and assigns emotion labels based on emojis."""
 import os
 import csv
 import emoji

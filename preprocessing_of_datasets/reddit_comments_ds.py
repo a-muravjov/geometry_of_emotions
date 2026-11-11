@@ -1,3 +1,4 @@
+"""Collects and labels Reddit comments from multiple subreddits using emoji-based emotion mappings."""
 from datasets import load_dataset
 import emoji
 from collections import defaultdict, Counter
@@ -16,17 +17,17 @@ subreddits = [
     "science"
 ]
 
-max_samples_per_subreddit = 38_800_000
 output_dir = "all_english_datasets_surprise_and_fear"
 os.makedirs(output_dir, exist_ok=True)
 
 emoji_to_emotion = {
     # JOY
-    "💐": "joy", "🌹": "joy", "💝": "joy", "🙇": "joy", "💞": "joy", "🥂": "joy",
-    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😄": "joy", "😁": "joy", "😆": "joy",
+    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy",
+    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😁": "joy", "😆": "joy",
     "😂": "joy", "🤣": "joy", "😊": "joy", "😉": "joy", "😍": "joy", "🥰": "joy", "😘": "joy",
-    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😙": "joy", "😛": "joy", "😜": "joy",
-    "🤪": "joy", "😝": "joy", "😌": "joy", "❤️": "joy", "🩷": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😛": "joy", "😜": "joy", "🤪": "joy",
+    "😝": "joy", "😌": "joy", "❤️": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "🙏": "joy",
 
     # SADNESS
     "💔": "sadness", "😢": "sadness", "😞": "sadness", "😓": "sadness",
@@ -37,10 +38,10 @@ emoji_to_emotion = {
     "😠": "anger", "🖕": "anger", "😤": "anger", "💢": "anger", "😾": "anger",
 
     # FEAR
-    "✝️": "fear", "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
+    "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
     "🙀": "fear", "😖": "fear", "😣": "fear",
 
-    # SURPRISE (updated)
+    # SURPRISE
     "🎉": "surprise",
     "🎊": "surprise",
     "🥳": "surprise",
@@ -51,6 +52,7 @@ emoji_to_emotion = {
     "😮": "surprise",
     "😳": "surprise",
     "🤯": "surprise",
+    "😵": "surprise",
 
     # DISGUST
     "🤮": "disgust", "🤢": "disgust",
@@ -123,8 +125,6 @@ for subreddit in subreddits:
             if checked % 100000 == 0:
                 print(f"{subreddit}: Processed {checked}")
 
-            if checked >= max_samples_per_subreddit:
-                break
 
     print("\nSaved pure mapped comments to:", output_file)
 

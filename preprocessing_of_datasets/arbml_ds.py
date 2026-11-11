@@ -1,3 +1,4 @@
+"""Extracts and labels arbml tweets using emoji-based emotion mappings."""
 from datasets import load_dataset
 import emoji
 from collections import defaultdict, Counter
@@ -7,11 +8,12 @@ dataset = load_dataset("arbml/Arabic_Sentiment_Twitter_Corpus")
 
 emoji_to_emotion = {
     # JOY
-    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy", "🥂": "joy",
-    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😄": "joy", "😁": "joy", "😆": "joy",
+    "💐": "joy", "🌹": "joy", "💝": "joy", "💞": "joy",
+    "🌈": "joy", "🤗": "joy", "😀": "joy", "😃": "joy", "😁": "joy", "😆": "joy",
     "😂": "joy", "🤣": "joy", "😊": "joy", "😉": "joy", "😍": "joy", "🥰": "joy", "😘": "joy",
-    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😙": "joy", "😛": "joy", "😜": "joy",
-    "🤪": "joy", "😝": "joy", "😌": "joy", "❤️": "joy", "🩷": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "😋": "joy", "🤩": "joy", "☺️": "joy", "😚": "joy", "😛": "joy", "😜": "joy", "🤪": "joy",
+    "😝": "joy", "😌": "joy", "❤️": "joy", "🧡": "joy", "💜": "joy", "❤": "joy",
+    "🙏": "joy",
 
     # SADNESS
     "💔": "sadness", "😢": "sadness", "😞": "sadness", "😓": "sadness",
@@ -22,10 +24,10 @@ emoji_to_emotion = {
     "😠": "anger", "🖕": "anger", "😤": "anger", "💢": "anger", "😾": "anger",
 
     # FEAR
-    "✝️": "fear", "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
+    "⚠️": "fear", "😥": "fear", "😨": "fear", "😰": "fear", "😱": "fear",
     "🙀": "fear", "😖": "fear", "😣": "fear",
 
-    # SURPRISE (updated)
+    # SURPRISE
     "🎉": "surprise",
     "🎊": "surprise",
     "🥳": "surprise",
@@ -36,22 +38,20 @@ emoji_to_emotion = {
     "😮": "surprise",
     "😳": "surprise",
     "🤯": "surprise",
+    "😵": "surprise",
 
     # DISGUST
     "🤮": "disgust", "🤢": "disgust",
 }
 
-# -------------------------
+
 # Helper
-# -------------------------
 def extract_emojis(text):
     if not isinstance(text, str):
         return []
     return [e["emoji"] for e in emoji.emoji_list(text)]
 
-# -------------------------
 # Process function
-# -------------------------
 def process_split(split_name):
     emotion_counts = defaultdict(int)
     emoji_counts = Counter()
@@ -120,8 +120,6 @@ def process_split(split_name):
     for e, count in emoji_counts.most_common():
         print(f"{e}: {count}")
 
-# -------------------------
 # Run both splits
-# -------------------------
 for split_name in dataset.keys():
     process_split(split_name)
